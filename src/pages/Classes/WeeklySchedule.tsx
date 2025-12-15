@@ -62,6 +62,8 @@ export default function WeeklySchedule() {
   const { boxId } = useParams();
   const { addToast } = useToast();
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [rooms, setRooms] = useState<RoomsData[]>([]);
   const [coaches, setCoaches] = useState<{ id: string; name: string }[]>([]);
   const [eventsByRoom, setEventsByRoom] = useState<
@@ -84,7 +86,7 @@ export default function WeeklySchedule() {
     notIsEditable: false,
   });
 
-  async function fetchData() {
+  async function fetchData(start?: Date | null, end?: Date | null) {
     if (!boxId) return;
 
     // Tipos de aula
@@ -116,17 +118,19 @@ export default function WeeklySchedule() {
     }));
     setCoaches(mappedCoaches);
 
-    // Aulas da semana
-    const today = new Date();
-    const monday = new Date(today);
-    const day = monday.getDay();
-    const diffToMonday = (day === 0 ? -6 : 1) - day;
-    monday.setDate(monday.getDate() + diffToMonday);
-    monday.setHours(0, 0, 0, 0);
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
+    if (!start || !end) {
+      const today = new Date();
+      const monday = new Date(today);
+      const day = monday.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      monday.setDate(monday.getDate() + diffToMonday);
+      monday.setHours(0, 0, 0, 0);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+      start = monday;
+      end = sunday;
+    }
 
     const { data: classes } = await supabase
       .from("Class")
@@ -145,8 +149,8 @@ export default function WeeklySchedule() {
     `
       )
       .eq("box_id", boxId ?? "")
-      .gte("datetime", monday.toISOString())
-      .lte("datetime", sunday.toISOString());
+      .gte("datetime", start.toISOString())
+      .lte("datetime", end.toISOString());
 
     function isSameOrFuture(date: Date) {
       const today = new Date();
@@ -191,7 +195,7 @@ export default function WeeklySchedule() {
   }
 
   useEffect(() => {
-    fetchData();
+    fetchData(startDate, endDate);
   }, [boxId, selectedRoom]);
 
   // detectar mobile
@@ -472,7 +476,7 @@ export default function WeeklySchedule() {
         if (error) throw error;
       }
 
-      await fetchData();
+      await fetchData(startDate, endDate);
 
       // 3. Reset flags
       setChangedEvents([]);
@@ -484,7 +488,7 @@ export default function WeeklySchedule() {
     } catch (error) {
       setIsLoading(false);
       addToast("Não foi possível guardar alterações!", "error");
-      await fetchData();
+      await fetchData(startDate, endDate);
     }
   }
 
@@ -590,6 +594,11 @@ export default function WeeklySchedule() {
               plugins={[timeGridPlugin, interactionPlugin]}
               initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
               allDaySlot={false}
+              datesSet={(arg) => {
+                setStartDate(arg.start);
+                setEndDate(arg.end);
+                fetchData(arg.start, arg.end);
+              }}
               slotMinTime="05:00:00"
               slotMaxTime="24:00:00"
               height="auto"

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import {
   BoxCubeIcon,
@@ -38,7 +38,6 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
   // depois
   const [openSubmenus, setOpenSubmenus] = useState<number[]>([]);
-  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -82,6 +81,7 @@ const AppSidebar: React.FC = () => {
       subItems: [
         { name: "Tipos de aulas", path: `/box/${boxId}/classes/types` },
         { name: "Horário", path: `/box/${boxId}/classes` },
+        { name: "Horário Template", path: `/box/${boxId}/classestemplate` },
       ],
     },
     {

@@ -19,6 +19,7 @@ import RoomsList from "./pages/Rooms/RoomsList";
 import RoomsCreate from "./pages/Rooms/RoomsCreate";
 import RoomsEdit from "./pages/Rooms/RoomsEdit";
 import WeeklySchedule from "./pages/Classes/WeeklySchedule";
+import WeeklyTemplate from "./pages/Classes/WeeklyTemplate";
 import Planning from "./pages/Workouts/Planning";
 import WeeklyView from "./pages/Workouts/WeeklyView";
 import StaffList from "./pages/Staff/StaffList";
@@ -81,6 +82,10 @@ export default function App() {
 
               {/* Classes */}
               <Route path="/box/:boxId/classes" element={<WeeklySchedule />} />
+              <Route
+                path="/box/:boxId/classestemplate"
+                element={<WeeklyTemplate />}
+              />
               <Route
                 path="/box/:boxId/classes/types"
                 element={<ClassTypes />}
