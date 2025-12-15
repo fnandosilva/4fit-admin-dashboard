@@ -203,7 +203,6 @@ export default function WeeklySchedule() {
   }, []);
 
   function markDirty(ev?: EventInput) {
-    console.log("dirty");
     setIsDirty(true);
     if (ev) {
       setChangedEvents((prev) => {
@@ -292,7 +291,6 @@ export default function WeeklySchedule() {
   async function handleCreateFromModal(classTypeId: string) {
     if (!selectedSlot) return;
     const ct = classTypes.find((c) => c.id === classTypeId)!;
-    console.log("classtypes", classTypes);
     const newEvent: EventInput = {
       id: uuidv4(),
       title: ct.name,
@@ -350,7 +348,6 @@ export default function WeeklySchedule() {
         info.event.endStr!
       );
     } catch (e) {
-      console.error(e);
       info.revert();
     }
   }
@@ -365,7 +362,6 @@ export default function WeeklySchedule() {
         info.event.endStr!
       );
     } catch (e) {
-      console.error(e);
       info.revert();
     }
   }
@@ -375,7 +371,6 @@ export default function WeeklySchedule() {
     const ext = evt.extendedProps || {};
     const originalRoomId = ext.roomId as string;
     const coachId = (ext.coachId as string) ?? coaches[0]?.id;
-    console.log(evt, evt.id, ext.isEditable);
     setEdit({
       open: true,
       eventId: evt.id,
@@ -450,9 +445,6 @@ export default function WeeklySchedule() {
   async function handleSaveToDB() {
     setIsLoading(true);
     try {
-      console.log(changedEvents);
-      console.log(deletedEvents);
-
       // 1. Guardar eventos alterados/adicionados
       for (const ev of changedEvents) {
         const startDate = new Date(ev.start as string | Date);

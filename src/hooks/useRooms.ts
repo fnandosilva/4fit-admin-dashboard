@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export interface Room {
   id: string;
@@ -23,17 +23,17 @@ export function useRooms(boxId: string) {
       setError(null);
 
       const { data, error: supabaseError } = await supabase
-        .from('Room')
-        .select('*')
-        .eq('box_id', boxId)
-        .order('name', { ascending: true });
+        .from("Room")
+        .select("*")
+        .eq("box_id", boxId)
+        .order("name", { ascending: true });
 
       if (supabaseError) throw supabaseError;
 
       setRooms(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar salas');
-      console.error('Error fetching rooms:', err);
+      setError(err instanceof Error ? err.message : "Erro ao carregar salas");
+      console.error("Error fetching rooms:", err);
     } finally {
       setLoading(false);
     }
@@ -41,19 +41,19 @@ export function useRooms(boxId: string) {
 
   useEffect(() => {
     if (!boxId) return;
-    
+
     fetchRooms();
 
     // Subscribe to real-time changes
     const channel = supabase
-      .channel('rooms_changes')
+      .channel("rooms_changes")
       .on(
-        'postgres_changes',
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'Room',
-          filter: `box_id=eq.${boxId}`
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "Room",
+          filter: `box_id=eq.${boxId}`,
         },
         () => {
           fetchRooms();
@@ -74,70 +74,69 @@ export function useRooms(boxId: string) {
       );
 
       const { error: supabaseError } = await supabase
-        .from('Room')
+        .from("Room")
         .update(cleanUpdates)
-        .eq('id', roomId);
+        .eq("id", roomId);
 
       if (supabaseError) throw supabaseError;
 
       // Atualizar localmente
-      setRooms(prev => 
-        prev.map(room => 
+      setRooms((prev) =>
+        prev.map((room) =>
           room.id === roomId ? { ...room, ...updates } : room
         )
       );
     } catch (err) {
-      console.error('Error updating room:', err);
+      console.error("Error updating room:", err);
       throw err;
     }
   };
 
-  const createRoom = async (roomData: Omit<Room, 'id' | 'created_at' | 'updated_at'>) => {
+  const createRoom = async (
+    roomData: Omit<Room, "id" | "created_at" | "updated_at">
+  ) => {
     try {
       const { data, error: supabaseError } = await supabase
-        .from('Room')
+        .from("Room")
         .insert(roomData)
         .select()
         .single();
 
       if (supabaseError) throw supabaseError;
 
-      setRooms(prev => [...prev, data]);
+      setRooms((prev) => [...prev, data]);
       return data;
     } catch (err) {
-      console.error('Error creating room:', err);
+      console.error("Error creating room:", err);
       throw err;
     }
   };
 
   const deleteRoom = async (roomId: string) => {
     try {
-      console.log('Attempting to delete room:', roomId);
-      
       // Use direct update approach (RPC not needed for now)
       const { data, error: supabaseError } = await supabase
-        .from('Room')
-        .update({ active: false })
-        .eq('id', roomId)
-        .select();
+        .from("Room")
+        .delete()
+        .eq("id", roomId);
 
       if (supabaseError) {
-        console.error('Error deleting room:', supabaseError);
+        console.error("Error deleting room:", supabaseError);
         return false;
       }
 
-      console.log('Room deletion successful:', data);
+      console.log("Room deletion successful:", data);
 
       // Update local state to reflect the soft deletion
-      setRooms(prev => 
-        prev.map(room => 
+      setRooms((prev) =>
+        prev.map((room) =>
           room.id === roomId ? { ...room, active: false } : room
         )
       );
 
       return true;
     } catch (err) {
-      console.error('Error deleting room (exception):', err);
+      console.error("Error deleting room (exception):", err);
       return false;
     }
   };

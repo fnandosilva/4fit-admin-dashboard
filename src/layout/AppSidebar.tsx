@@ -114,18 +114,15 @@ const AppSidebar: React.FC = () => {
 
   // 🧭 Ativar submenu correto ao carregar a página
   useEffect(() => {
-    navItems.forEach((nav, index) => {
-      if (nav.subItems) {
-        nav.subItems.forEach((subItem) => {
-          if (isActive(subItem.path)) {
-            setOpenSubmenus((prev) =>
-              prev.includes(index) ? prev : [...prev, index]
-            );
-          }
-        });
-      }
-    });
-  }, [location, isActive, navItems]);
+    const activeIndexes = navItems
+      .map((nav, index) =>
+        nav.subItems?.some((sub) => isActive(sub.path)) ? index : null
+      )
+      .filter((i): i is number => i !== null);
+
+    // Só abre se ainda não tiver sido aberto antes
+    setOpenSubmenus((prev) => (prev.length === 0 ? activeIndexes : prev));
+  }, [location.pathname]);
 
   const handleSubmenuToggle = (index: number) => {
     setOpenSubmenus((prev) =>
@@ -177,29 +174,31 @@ const AppSidebar: React.FC = () => {
                 </button>
 
                 {/* Submenu */}
-                <div
-                  className={`overflow-hidden transition-all duration-300 ${
-                    openSubmenus.includes(index) ? "max-h-96" : "max-h-0"
-                  }`}
-                >
-                  <ul className="mt-2 space-y-1 ml-9">
-                    {nav.subItems.map((subItem) => (
-                      <li key={subItem.name}>
-                        <Link
-                          to={subItem.path}
-                          onClick={closeMobileSidebar}
-                          className={`menu-dropdown-item ${
-                            isActive(subItem.path)
-                              ? "menu-dropdown-item-active"
-                              : "menu-dropdown-item-inactive"
-                          }`}
-                        >
-                          {subItem.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openSubmenus.includes(index) ? "max-h-96" : "max-h-0"
+                    }`}
+                  >
+                    <ul className="mt-2 space-y-1 ml-9">
+                      {nav.subItems.map((subItem) => (
+                        <li key={subItem.name}>
+                          <Link
+                            to={subItem.path}
+                            onClick={closeMobileSidebar}
+                            className={`menu-dropdown-item ${
+                              isActive(subItem.path)
+                                ? "menu-dropdown-item-active"
+                                : "menu-dropdown-item-inactive"
+                            }`}
+                          >
+                            {subItem.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               nav.path && (
